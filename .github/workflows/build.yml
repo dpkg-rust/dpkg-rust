@@ -1,0 +1,52 @@
+name: Build and test
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential autoconf automake libtool autopoint gettext \
+            pkgconf perl po4a libmd-dev zlib1g-dev libbz2-dev liblzma-dev \
+            libzstd-dev libselinux-dev libncurses-dev bzip2 xz-utils zstd \
+            libtest-pod-perl libtest-strict-perl
+
+      - name: Bootstrap
+        run: ./autogen
+
+      - name: Configure
+        run: |
+          mkdir build-tree
+          cd build-tree
+          ../configure
+
+      - name: Compile
+        run: make -C build-tree -j"$(nproc)"
+
+      - name: Run tests
+        run: make -C build-tree -j"$(nproc)" check
+
+      - name: Show test diagnostics on failure
+        if: failure()
+        run: |
+          find build-tree -type f \( -name config.log -o -name test-suite.log \) \
+            -print -exec cat {} \;
