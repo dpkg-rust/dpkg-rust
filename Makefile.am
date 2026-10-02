@@ -68,6 +68,7 @@ EXTRA_DIST = \
 	build-aux/run-script \
 	build-aux/test-runner \
 	doc/coding-style.txt \
+	doc/rust-rewrite \
 	debian/README.bug-usertags \
 	debian/buildpackage.conf \
 	debian/changelog \
